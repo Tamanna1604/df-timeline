@@ -21,12 +21,14 @@ def list_tables(db_path):
     conn.close()
 
 # Replace with your actual database path
-list_tables("datasets/History.db")
+list_tables("/content/df-timeline/datasets/History.db")
+
+
 
 
 import os
 
-db_path = "datasets/History.db"
+db_path = "/content/df-timeline/datasets/History.db"
 
 
 if not os.path.exists(db_path):
@@ -36,6 +38,7 @@ elif os.path.getsize(db_path) == 0:
 else:
     print(f"Database file '{db_path}' exists and is not empty. Proceeding...")
     # Proceed with querying the database here
+
 
 
 
