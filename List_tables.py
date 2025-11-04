@@ -21,11 +21,13 @@ def list_tables(db_path):
     conn.close()
 
 # Replace with your actual database path
-list_tables("C:/Users/karan/OneDrive/Desktop/Cyber_techniques Project/datasets/History.db")
+list_tables("db_path = "datasets/History.db"
+")
 
 import os
 
-db_path = "C:/Users/karan/OneDrive/Desktop/Cyber_techniques Project/datasets/History.db"
+db_path = "db_path = "datasets/History.db"
+"
 
 if not os.path.exists(db_path):
     print(f"Error: Database file '{db_path}' does not exist.")
@@ -34,3 +36,4 @@ elif os.path.getsize(db_path) == 0:
 else:
     print(f"Database file '{db_path}' exists and is not empty. Proceeding...")
     # Proceed with querying the database here
+
