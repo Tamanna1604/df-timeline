@@ -21,8 +21,8 @@ def list_tables(db_path):
     conn.close()
 
 # Replace with your actual database path
-list_tables("db_path = "datasets/History.db"
-")
+list_tables("datasets/History.db")
+
 
 import os
 
@@ -36,4 +36,5 @@ elif os.path.getsize(db_path) == 0:
 else:
     print(f"Database file '{db_path}' exists and is not empty. Proceeding...")
     # Proceed with querying the database here
+
 
