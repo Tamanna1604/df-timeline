@@ -13,19 +13,7 @@ REPORT_FILE = '/content/df-timeline/df-timeline/forensics_report.html'
 # Step 1: Run Memory Analysis (Volatility)
 import subprocess
 
-def run_volatility(image_path):
-    print("[INFO] Running memory analysis with Volatility 3...")
 
-    # Specify the Volatility 3 command and plugin
-    cmd = f'python "C:/Users/karan/Downloads/volatility3-develop/vol.py" -f "{image_path}" windows.pslist.PsList'
-    
-    try:
-        output = subprocess.check_output(cmd, shell=True, stderr=subprocess.STDOUT).decode()
-        with open('memory_analysis.txt', 'w') as f:
-            f.write(output)
-        print("[INFO] Memory analysis complete!")
-    except subprocess.CalledProcessError as e:
-        print("Volatility command failed with the following error:\n", e.output.decode())
 
 
 
@@ -261,3 +249,4 @@ SCAN_PATH = "/usr/local/lib/python3.12/dist-packages/volatility3/cli/vol.py"
     main_pipeline(MEMORY_IMAGE_PATH, PCAP_FILE_PATH, DISK_IMAGE_PATH, SCAN_PATH,api_key)
 
     
+
