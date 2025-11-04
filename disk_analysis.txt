@@ -1,0 +1,37 @@
+Detailed Disk Analysis Report
+==================================================
+Disk Image: C:/Users/karan/OneDrive/Desktop/Cyber_techniques Project/datasets/disk_img.img
+Partition Offset: 8192
+
+File Metadata:
+--------------------------------------------------
+Path: /RECOVERY    (Volume Label Entry)
+Size: 0 bytes
+Created: 2020-01-08T18:57:28
+Modified: 2020-01-08T18:57:28
+Accessed: 2020-01-08T00:00:00
+--------------------------------------------------
+Path: /$MBR
+Size: 512 bytes
+Created: N/A
+Modified: N/A
+Accessed: N/A
+--------------------------------------------------
+Path: /$FAT1
+Size: 8372224 bytes
+Created: N/A
+Modified: N/A
+Accessed: N/A
+--------------------------------------------------
+Path: /$FAT2
+Size: 8372224 bytes
+Created: N/A
+Modified: N/A
+Accessed: N/A
+--------------------------------------------------
+Path: /$OrphanFiles
+Size: 0 bytes
+Created: N/A
+Modified: N/A
+Accessed: N/A
+--------------------------------------------------

@@ -1,0 +1,5 @@
+2020-01-08 18:57:28, File Access, RECOVERY    (Volume Label Entry)
+1970-01-01 00:00:00, File Access, $MBR
+1970-01-01 00:00:00, File Access, $FAT1
+1970-01-01 00:00:00, File Access, $FAT2
+1970-01-01 00:00:00, File Access, $OrphanFiles
