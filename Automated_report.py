@@ -5,8 +5,9 @@ import matplotlib.pyplot as plt
 import os
 
 # Directories
-TEMPLATE_DIR = 'C:/Users/karan/OneDrive/Desktop/Cyber_techniques Project/templates'
-REPORT_FILE = 'forensics_report.html'
+TEMPLATE_DIR = '/content/df-timeline/df-timeline/templates'
+REPORT_FILE = '/content/df-timeline/df-timeline/forensics_report.html'
+
 
 
 # Step 1: Run Memory Analysis (Volatility)
@@ -250,12 +251,13 @@ def main_pipeline(memory_image, pcap_file, disk_image, scan_path,api_key):
 
 if __name__ == "__main__":
     # Example file paths (update with your own file paths)
-    MEMORY_IMAGE_PATH = "C:/Users/karan/OneDrive/Desktop/Cyber_techniques Project/datasets/Challenge.raw"
-    PCAP_FILE_PATH = "C:/Users/karan/OneDrive/Desktop/Cyber_techniques Project/datasets/traffic.pcap"
-    DISK_IMAGE_PATH = "C:/Users/karan/OneDrive/Desktop/Cyber_techniques Project/datasets/disk_img.img"
-    # YARA_RULES_PATH = "C:/Users/karan/yara/rules.yar"
-    SCAN_PATH = r"C:/Users/karan/OneDrive/Desktop/Cyber_techniques Project/sample_malware.bat"
+   MEMORY_IMAGE_PATH = "/content/df-timeline/df-timeline/datasets/memdump.raw"
+PCAP_FILE_PATH = "/content/df-timeline/df-timeline/datasets/traffic.pcap"
+DISK_IMAGE_PATH = "/content/df-timeline/df-timeline/datasets/disk_image.E01"
+SCAN_PATH = "/usr/local/lib/python3.12/dist-packages/volatility3/cli/vol.py"
+
     api_key = "ebaa3bd3665a81f726cabf2ca8a60b0a8bbff83e7d72f4f782be6a15bd42d010"  
     # Run the full pipeline
     main_pipeline(MEMORY_IMAGE_PATH, PCAP_FILE_PATH, DISK_IMAGE_PATH, SCAN_PATH,api_key)
+
     
