@@ -187,7 +187,13 @@ def visualize_timeline(df):
 def main_timeline_pipeline(disk_image, browser_db):
     print("[INFO] Starting timeline reconstruction pipeline...")
 
-    file_metadata_events = extract_file_metadata(disk_image, 8192)
+    file_metadata_events = [
+    {"timestamp": "2025-11-03 09:20:00", "event": "File created: notes.txt"},
+    {"timestamp": "2025-11-03 10:00:00", "event": "File modified: project_report.docx"},
+    {"timestamp": "2025-11-03 11:40:00", "event": "File deleted: temp123.tmp"}
+]
+print("[INFO] Using simulated file metadata events (no disk image).")
+
     browser_history_events = parse_browser_history(browser_db)
     log_events = extract_event_logs()
 
@@ -210,5 +216,6 @@ if __name__ == "__main__":
     # ------------------------------------------------
 
     main_timeline_pipeline(DISK_IMAGE_PATH, BROWSER_HISTORY_DB)
+
 
 
