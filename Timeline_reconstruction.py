@@ -205,8 +205,9 @@ def main_timeline_pipeline(disk_image, browser_db):
 
 if __name__ == "__main__":
     # ---- CHANGE THESE PATHS TO YOUR LOCAL FILES ----
-    DISK_IMAGE_PATH = "C:/Users/YourName/Desktop/CyberTech_Project/datasets/disk_img.img"
-    BROWSER_HISTORY_DB = "C:/Users/YourName/Desktop/CyberTech_Project/datasets/History.db"
+   DISK_IMAGE_PATH = "/content/df-timeline/datasets/disk_img.img"
+BROWSER_HISTORY_DB = "/content/df-timeline/datasets/History.db"
     # ------------------------------------------------
 
     main_timeline_pipeline(DISK_IMAGE_PATH, BROWSER_HISTORY_DB)
+
