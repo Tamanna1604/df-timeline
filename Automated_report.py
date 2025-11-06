@@ -1,252 +1,248 @@
+import os
 import subprocess
 import pandas as pd
-from jinja2 import Environment, FileSystemLoader
 import matplotlib.pyplot as plt
-import os
-
-# Directories
-TEMPLATE_DIR = '/content/df-timeline/df-timeline/templates'
-REPORT_FILE = '/content/df-timeline/df-timeline/forensics_report.html'
-
-
-
-# Step 1: Run Memory Analysis (Volatility)
-import subprocess
-
-
-
-
-
-# Step 2: Run Network Analysis (tshark/PCAP)
-def analyze_pcap(pcap_file):
-    print("[INFO] Running network analysis on PCAP file...")
-    cmd = f'tshark -r "{pcap_file}" -q -z "io,stat,1"'
-    output = subprocess.check_output(cmd, shell=True).decode()
-    with open('network_analysis.txt', 'w') as f:
-        f.write(output)
-    print("[INFO] Network analysis complete!")
-
-
-# Step 3: Disk Image Analysis (SleuthKit)
-import pytsk3
-from pytsk3 import Img_Info, FS_Info, Directory, File
-from datetime import datetime
-
-def analyze_disk_image(image_path,offset):
-    from pytsk3 import Img_Info, FS_Info, Directory, File
-    from datetime import datetime
-    print("[INFO] Running detailed disk image analysis...")
-    
-    # Load the disk image
-    img = Img_Info(image_path)
-    
-    # Open the file system using the offset for the FAT32 partition
-    fs = FS_Info(img, offset=offset * 512)  # Offset in bytes
-    
-    # Initialize an empty list to hold file data
-    file_data = []
-
-    # Function to recursively traverse directories
-    def traverse_directory(directory, parent_path=""):
-        for entry in directory:
-            if entry.info.name.name in [b'.', b'..']:
-                continue
-            
-            # Build the file path
-            file_path = f"{parent_path}/{entry.info.name.name.decode('utf-8', 'ignore')}"
-            
-            if entry.info.meta:
-                # Collect file metadata
-                file_size = entry.info.meta.size
-                creation_time = datetime.fromtimestamp(entry.info.meta.crtime).isoformat() if entry.info.meta.crtime else "N/A"
-                modification_time = datetime.fromtimestamp(entry.info.meta.mtime).isoformat() if entry.info.meta.mtime else "N/A"
-                access_time = datetime.fromtimestamp(entry.info.meta.atime).isoformat() if entry.info.meta.atime else "N/A"
-                
-                # Append file metadata to list
-                file_data.append({
-                    "path": file_path,
-                    "size": file_size,
-                    "created": creation_time,
-                    "modified": modification_time,
-                    "accessed": access_time
-                })
-                
-            # If the entry is a directory, recurse into it
-            if entry.info.meta and entry.info.meta.type == pytsk3.TSK_FS_META_TYPE_DIR:
-                sub_directory = entry.as_directory()
-                traverse_directory(sub_directory, parent_path=file_path)
-
-    # Start traversal from the root directory
-    root_dir = fs.open_dir("/")
-    traverse_directory(root_dir)
-    
-    # Write collected data to disk_analysis.txt
-    with open("disk_analysis.txt", "w") as f:
-        f.write("Detailed Disk Analysis Report\n")
-        f.write("=" * 50 + "\n")
-        f.write(f"Disk Image: {image_path}\n")
-        f.write(f"Partition Offset: {offset}\n\n")
-        f.write("File Metadata:\n")
-        f.write("-" * 50 + "\n")
-        
-        for entry in file_data:
-            f.write(f"Path: {entry['path']}\n")
-            f.write(f"Size: {entry['size']} bytes\n")
-            f.write(f"Created: {entry['created']}\n")
-            f.write(f"Modified: {entry['modified']}\n")
-            f.write(f"Accessed: {entry['accessed']}\n")
-            f.write("-" * 50 + "\n")
-    
-    print("[INFO] Disk image analysis complete! Data written to disk_analysis.txt")
-
 import requests
 import time
+from jinja2 import Environment, FileSystemLoader
+import pytsk3
+from pytsk3 import Img_Info, FS_Info
+from datetime import datetime
+
+# ===========================================================
+# CONFIGURATION (Change these paths as per your environment)
+# ===========================================================
+
+TEMPLATE_DIR = "templates"  # Folder containing report_template.html
+REPORT_FILE = "forensics_report.html"  # Output HTML report
+
+MEMORY_IMAGE_PATH = "datasets/memdump.raw"
+PCAP_FILE_PATH = "datasets/traffic.pcap"
+DISK_IMAGE_PATH = "datasets/disk_image.E01"
+SCAN_PATH = "datasets/sample.exe"  # File to scan for malware
+API_KEY = "YOUR_VIRUSTOTAL_API_KEY_HERE"  # Replace with your VirusTotal API key
+
+
+# ===========================================================
+# STEP 1: MEMORY ANALYSIS (Volatility)
+# ===========================================================
+
+def run_volatility(memory_image):
+    """
+    Example memory analysis function using Volatility 3.
+    Modify this command as per your volatility setup.
+    """
+    print("[INFO] Running memory analysis using Volatility...")
+    try:
+        cmd = f"volatility3 -f {memory_image} windows.pslist.PsList"
+        output = subprocess.check_output(cmd, shell=True).decode()
+        with open("memory_analysis.txt", "w") as f:
+            f.write(output)
+        print("[INFO] Memory analysis complete! Saved to memory_analysis.txt")
+    except Exception as e:
+        print(f"[ERROR] Volatility failed: {e}")
+
+
+# ===========================================================
+# STEP 2: NETWORK ANALYSIS (PCAP)
+# ===========================================================
+
+def analyze_pcap(pcap_file):
+    print("[INFO] Running network analysis on PCAP file...")
+    try:
+        cmd = f'tshark -r "{pcap_file}" -q -z "io,stat,1"'
+        output = subprocess.check_output(cmd, shell=True).decode()
+        with open("network_analysis.txt", "w") as f:
+            f.write(output)
+        print("[INFO] Network analysis complete! Saved to network_analysis.txt")
+    except Exception as e:
+        print(f"[ERROR] Tshark analysis failed: {e}")
+
+
+# ===========================================================
+# STEP 3: DISK IMAGE ANALYSIS (SleuthKit)
+# ===========================================================
+
+def analyze_disk_image(image_path, offset):
+    print("[INFO] Running detailed disk image analysis...")
+    try:
+        img = Img_Info(image_path)
+        fs = FS_Info(img, offset=offset * 512)  # Convert sector offset to bytes
+        file_data = []
+
+        def traverse_directory(directory, parent_path=""):
+            for entry in directory:
+                if entry.info.name.name in [b'.', b'..']:
+                    continue
+
+                file_path = f"{parent_path}/{entry.info.name.name.decode('utf-8', 'ignore')}"
+
+                if entry.info.meta:
+                    file_size = entry.info.meta.size
+                    creation_time = datetime.fromtimestamp(entry.info.meta.crtime).isoformat() if entry.info.meta.crtime else "N/A"
+                    modification_time = datetime.fromtimestamp(entry.info.meta.mtime).isoformat() if entry.info.meta.mtime else "N/A"
+                    access_time = datetime.fromtimestamp(entry.info.meta.atime).isoformat() if entry.info.meta.atime else "N/A"
+
+                    file_data.append({
+                        "path": file_path,
+                        "size": file_size,
+                        "created": creation_time,
+                        "modified": modification_time,
+                        "accessed": access_time
+                    })
+
+                if entry.info.meta and entry.info.meta.type == pytsk3.TSK_FS_META_TYPE_DIR:
+                    sub_directory = entry.as_directory()
+                    traverse_directory(sub_directory, parent_path=file_path)
+
+        root_dir = fs.open_dir("/")
+        traverse_directory(root_dir)
+
+        with open("disk_analysis.txt", "w") as f:
+            f.write("Detailed Disk Analysis Report\n")
+            f.write("=" * 50 + "\n")
+            f.write(f"Disk Image: {image_path}\n")
+            f.write(f"Partition Offset: {offset}\n\n")
+            f.write("File Metadata:\n")
+            f.write("-" * 50 + "\n")
+
+            for entry in file_data:
+                f.write(f"Path: {entry['path']}\n")
+                f.write(f"Size: {entry['size']} bytes\n")
+                f.write(f"Created: {entry['created']}\n")
+                f.write(f"Modified: {entry['modified']}\n")
+                f.write(f"Accessed: {entry['accessed']}\n")
+                f.write("-" * 50 + "\n")
+
+        print("[INFO] Disk image analysis complete! Saved to disk_analysis.txt")
+
+    except Exception as e:
+        print(f"[ERROR] Disk analysis failed: {e}")
+
+
+# ===========================================================
+# STEP 4: MALWARE ANALYSIS (VirusTotal API)
+# ===========================================================
 
 def analyze_malware(api_key, file_path):
-    
+    print("[INFO] Running malware scan via VirusTotal API...")
     base_url = "https://www.virustotal.com/api/v3"
-    headers = {
-        "x-apikey": api_key
-    }
+    headers = {"x-apikey": api_key}
 
-    # Upload the file
-    with open(file_path, "rb") as file:
-        response = requests.post(
-            f"{base_url}/files",
-            headers=headers,
-            files={"file": file}
-        )
+    try:
+        with open(file_path, "rb") as file:
+            response = requests.post(f"{base_url}/files", headers=headers, files={"file": file})
 
-    if response.status_code != 200:
-        print("Failed to upload file:", response.json())
-        return
+        if response.status_code != 200:
+            print("Failed to upload file:", response.json())
+            return
 
-    file_analysis = response.json()
-    analysis_id = file_analysis['data']['id']
-    print(f"File uploaded successfully. Analysis ID: {analysis_id}")
+        file_analysis = response.json()
+        analysis_id = file_analysis['data']['id']
+        print(f"File uploaded successfully. Analysis ID: {analysis_id}")
 
-    # Poll the analysis status
-    while True:
-        report_response = requests.get(
-            f"{base_url}/analyses/{analysis_id}",
-            headers=headers
-        )
-        report_data = report_response.json()
+        while True:
+            report_response = requests.get(f"{base_url}/analyses/{analysis_id}", headers=headers)
+            report_data = report_response.json()
+            status = report_data['data']['attributes']['status']
+            if status == 'completed':
+                print("[INFO] Malware analysis completed!")
+                break
+            else:
+                print("[INFO] Waiting for report...")
+                time.sleep(10)
 
-        status = report_data['data']['attributes']['status']
-        if status == 'completed':
-            print("Analysis completed!")
-            break
-        else:
-            print("Analysis in progress, waiting...")
-            time.sleep(10)  # Poll every 10 seconds
+        results = report_data['data']['attributes']['results']
+        with open("malware_analysis.txt", "w") as report_file:
+            report_file.write(f"Malware Analysis Report for {file_path}\n")
+            report_file.write("=" * 60 + "\n\n")
 
-    # Get the scan results
-    results = report_data['data']['attributes']['results']
+            for engine, details in results.items():
+                report_file.write(f"Engine: {engine}\n")
+                report_file.write(f"Category: {details['category']}\n")
+                report_file.write(f"Result: {details['result']}\n")
+                report_file.write("-" * 40 + "\n")
 
-    # Write the results to a text file
-    with open('malware_analysis.txt', "w") as report_file:
-        report_file.write(f"Malware Analysis Report for {file_path}\n")
-        report_file.write("=" * 60 + "\n\n")
+        print("[INFO] Malware analysis complete! Saved to malware_analysis.txt")
 
-        for engine, details in results.items():
-            report_file.write(f"Engine: {engine}\n")
-            report_file.write(f"Category: {details['category']}\n")
-            report_file.write(f"Result: {details['result']}\n")
-            report_file.write("-" * 40 + "\n")
-
-    print(f"Report saved to malware_analysis.txt ")
+    except Exception as e:
+        print(f"[ERROR] Malware scan failed: {e}")
 
 
+# ===========================================================
+# STEP 5: AGGREGATE DATA
+# ===========================================================
 
-
-
-# Step 5: Aggregate Data
 def aggregate_data():
     print("[INFO] Aggregating forensic data...")
-    memory_data = open('memory_analysis.txt').readlines()
-    network_data = open('network_analysis.txt').readlines()
-    disk_data = open('disk_analysis.txt').readlines()
-    malware_data = open('malware_analysis.txt').readlines()
+    files = ["memory_analysis.txt", "network_analysis.txt", "disk_analysis.txt", "malware_analysis.txt"]
+    sources = ["Memory", "Network", "Disk", "Malware"]
 
-    aggregated_data = [
-        {"source": "Memory", "analysis": " ".join(memory_data)},
-        {"source": "Network", "analysis": " ".join(network_data)},
-        {"source": "Disk", "analysis": " ".join(disk_data)},
-        {"source": "Malware", "analysis": " ".join(malware_data)}
-    ]
-    
-    df = pd.DataFrame(aggregated_data)
+    data = []
+    for src, file in zip(sources, files):
+        if os.path.exists(file):
+            with open(file, "r") as f:
+                content = f.read()
+            data.append({"source": src, "analysis": content})
+        else:
+            data.append({"source": src, "analysis": "No data found."})
+
+    df = pd.DataFrame(data)
     print("[INFO] Data aggregation complete!")
-    return df, memory_data, network_data, disk_data, malware_data
+    return df
 
-# Step 6: Generate Forensic Report (HTML Report)
-def generate_report(aggregated_df, memory_data, network_data, disk_data, malware_data):
+
+# ===========================================================
+# STEP 6: GENERATE FORENSIC REPORT (HTML)
+# ===========================================================
+
+def generate_report(aggregated_df):
     print("[INFO] Generating forensic report...")
-
     env = Environment(loader=FileSystemLoader(TEMPLATE_DIR))
-    template = env.get_template('report_template.html')
+    template = env.get_template("report_template.html")
 
-    output = template.render(
-        aggregated_data=aggregated_df.to_dict('records'),
-        memory_data="".join(memory_data),
-        network_data="".join(network_data[:50]),
-        disk_data="".join(disk_data),
-        malware_data="".join(malware_data)
-    )
+    output = template.render(aggregated_data=aggregated_df.to_dict("records"))
 
-    with open(REPORT_FILE, 'w') as f:
+    with open(REPORT_FILE, "w") as f:
         f.write(output)
-    print(f"[INFO] Report generated: {REPORT_FILE}")
+    print(f"[INFO] Report generated successfully: {REPORT_FILE}")
 
 
-# Step 6: Visualize Data (Optional)
+# ===========================================================
+# STEP 7: VISUALIZATION
+# ===========================================================
+
 def visualize_data(df):
-    print("[INFO] Visualizing data...")
-    df.groupby('source')['analysis'].count().plot(kind='bar')
-    plt.title("Forensic Data Summary")
+    print("[INFO] Visualizing data summary...")
+    df['length'] = df['analysis'].apply(len)
+    df.plot(kind="bar", x="source", y="length", legend=False)
+    plt.title("Forensic Data Volume by Source")
+    plt.ylabel("Characters")
     plt.show()
-    print("[INFO] Data visualization complete!")
 
 
-# Main pipeline function to execute all steps
-def main_pipeline(memory_image, pcap_file, disk_image, scan_path,api_key):
+# ===========================================================
+# MAIN PIPELINE
+# ===========================================================
+
+def main_pipeline():
     print("[INFO] Starting forensic analysis pipeline...")
 
-    # Step 1: Run memory analysis
-    run_volatility(memory_image)
+    run_volatility(MEMORY_IMAGE_PATH)
+    analyze_pcap(PCAP_FILE_PATH)
+    analyze_disk_image(DISK_IMAGE_PATH, offset=8192)
+    analyze_malware(API_KEY, SCAN_PATH)
 
-    # Step 2: Run network analysis
-    analyze_pcap(pcap_file)
-
-    # Step 3: Run disk analysis
-    analyze_disk_image(disk_image,offset=8192)
-
-    # Step 4: Run malware analysis
-    # Replace with the path to save the report
-    analyze_malware(api_key, scan_path)
-
-    # Step 5: Aggregate data
-    aggregated_df, memory_data, network_data, disk_data, malware_data = aggregate_data()
-
-    # Step 6: Generate HTML report
-    generate_report(aggregated_df, memory_data, network_data, disk_data, malware_data)
-
-    # Step 7: Visualize data
+    aggregated_df = aggregate_data()
+    generate_report(aggregated_df)
     visualize_data(aggregated_df)
 
+    print("[INFO] Forensic analysis pipeline complete!")
 
+
+# ===========================================================
+# ENTRY POINT
+# ===========================================================
 
 if __name__ == "__main__":
-    # Example file paths (update with your own file paths)
-   MEMORY_IMAGE_PATH = "/content/df-timeline/df-timeline/datasets/memdump.raw"
-PCAP_FILE_PATH = "/content/df-timeline/df-timeline/datasets/traffic.pcap"
-DISK_IMAGE_PATH = "/content/df-timeline/df-timeline/datasets/disk_image.E01"
-SCAN_PATH = "/usr/local/lib/python3.12/dist-packages/volatility3/cli/vol.py"
-
-    api_key = "ebaa3bd3665a81f726cabf2ca8a60b0a8bbff83e7d72f4f782be6a15bd42d010"  
-    # Run the full pipeline
-    main_pipeline(MEMORY_IMAGE_PATH, PCAP_FILE_PATH, DISK_IMAGE_PATH, SCAN_PATH,api_key)
-
-    
-
+    main_pipeline()
