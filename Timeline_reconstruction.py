@@ -72,7 +72,16 @@ def parse_browser_history(db_path):
             last_visit_time = row[2]
             if last_visit_time:
                 # Convert from microseconds since 1601-01-01
-                timestamp = datetime(1601, 1, 1) + timedelta(seconds=last_visit_time / 1_000_000)
+                try:
+                    # Chrome-style timestamp (microseconds since 1601)
+                    timestamp = datetime(1601, 1, 1) + timedelta(seconds=float(last_visit_time) / 1_000_000)
+                except:
+                    # Human-readable string (YYYY-MM-DD HH:MM:SS)
+                    try:
+                        timestamp = datetime.strptime(last_visit_time, "%Y-%m-%d %H:%M:%S")
+                    except:
+                        timestamp = datetime.now()
+
                 formatted_time = timestamp.strftime("%Y-%m-%d %H:%M:%S")
                 event = {
                     "timestamp": formatted_time,
@@ -216,6 +225,7 @@ if __name__ == "__main__":
     # ------------------------------------------------
 
     main_timeline_pipeline(DISK_IMAGE_PATH, BROWSER_HISTORY_DB)
+
 
 
 
