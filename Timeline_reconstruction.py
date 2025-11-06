@@ -11,10 +11,10 @@ import matplotlib.pyplot as plt
 # ===========================================================
 
 BASE_DIR = "/content/df-timeline"
-
 TEMPLATE_DIR = os.path.join(BASE_DIR, "templates")
 TIMELINE_REPORT_FILE = os.path.join(BASE_DIR, "timeline_report.html")
 TIMELINE_CSV_FILE = os.path.join(BASE_DIR, "timeline_output.csv")
+
 
 # ===========================================================
 # STEP 1: EXTRACT FILE METADATA USING pytsk3 (SleuthKit)
@@ -225,6 +225,7 @@ if __name__ == "__main__":
     # ------------------------------------------------
 
     main_timeline_pipeline(DISK_IMAGE_PATH, BROWSER_HISTORY_DB)
+
 
 
 
