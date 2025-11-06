@@ -5,10 +5,12 @@ from datetime import datetime, timedelta
 from jinja2 import Environment, FileSystemLoader
 import matplotlib.pyplot as plt
 
-# Directories
-TEMPLATE_DIR = 'C:/Users/karan/OneDrive/Desktop/Cyber_techniques Project/templates'
-TIMELINE_REPORT_FILE = 'timeline_report.html'
-TIMELINE_CSV_FILE = 'timeline_output.csv'
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Paths relative to repo
+TEMPLATE_DIR = os.path.join(BASE_DIR, "templates")
+TIMELINE_REPORT_FILE = os.path.join(BASE_DIR, "timeline_report.html")
+TIMELINE_CSV_FILE = os.path.join(BASE_DIR, "timeline_output.csv")
 
 
 # Step 1: Extract File Metadata using pytsk3 (SleuthKit)
@@ -187,3 +189,4 @@ if __name__ == "__main__":
 
     # Run the full pipeline
     main_timeline_pipeline(DISK_IMAGE_PATH, BROWSER_HISTORY_DB)
+
