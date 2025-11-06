@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 # CONFIGURATION (Change these paths as per your system)
 # ===========================================================
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = "/content/df-timeline"
 
 TEMPLATE_DIR = os.path.join(BASE_DIR, "templates")
 TIMELINE_REPORT_FILE = os.path.join(BASE_DIR, "timeline_report.html")
@@ -225,6 +225,7 @@ if __name__ == "__main__":
     # ------------------------------------------------
 
     main_timeline_pipeline(DISK_IMAGE_PATH, BROWSER_HISTORY_DB)
+
 
 
 
